@@ -1,11 +1,11 @@
-name: Custom Vanilla Desktop # Replace this name with your image name
-id: custom # Replace this ID with your image ID
+name: VeryLoud's Vanilla Desktop
+id: vanilla-veryloud
 stages:
 - id: build
-  base: ghcr.io/vanilla-os/desktop:main # Optionally, Replace this image URL with a different one i.e. nvidia:main, etc
+  base: ghcr.io/vanilla-os/desktop:main
   singlelayer: false
   labels:
-    maintainer: self-maintained # Optionally, Replace this with your name
+    maintainer: Maxim Therrien
   args:
     DEBIAN_FRONTEND: noninteractive # Set the image environment as non-interactive
   
@@ -21,27 +21,40 @@ stages:
     - lpkg --unlock
     - apt-get update
 
-  # Put your custom actions behind this comment
+  # BEGIN CUSTOM ACTIONS
 
-  - name: example-packages # Sample module using the built-in Apt module to install packages
+  # - name: 1password
+  #   type: includes
+  #   includes:
+  #     - modules/50-install-1password.yml
+
+  # Steps as outlined in https://support.1password.com/install-linux/#debian-or-ubuntu
+  - name: add-1password-repo
+    type: shell
+    commands:
+      - curl -sS https://downloads.1password.com/linux/keys/1password.asc | gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+      - echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | tee /etc/apt/sources.list.d/1password.list
+      - mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+      - curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
+      - mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+      - curl -sS https://downloads.1password.com/linux/keys/1password.asc | gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+      - apt update
+
+  - name: install-1password
     type: apt
     source:
       packages:
-      - vim
+        - 1password
+        - 1password-cli
 
-  - name: example-commands # Sample module demonstrating the Shell module with custom commands
+    # https://github.com/Vanilla-OS/ABRoot/issues/221
+  - name: abroot-opt-workaround
     type: shell
     commands:
-    - echo Example output
-
-  - name: example-modules # Sample module demonstrating importing local and remote modules
-    type: includes
-    includes:
-      - modules/50-install-debs.yml # Sample local module present in this repository
-      - gh:vanilla-os/dev-image:main:modules/00-basics.yml # Sample GitHub remote module in the format: `gh:your-name/your-repo:branch:modules/file.yml`
-      - https://raw.githubusercontent.com/Vanilla-OS/dev-image/main/modules/05-go.yml # Sample full URL remote module
-
-  # Put your custom actions before this comment
+      - chmod +x /usr/bin/vos-opt-symlink
+      - systemctl enable vos-opt-symlink.service
+      
+  # END CUSTOM ACTIONS
 
   - name: set-image-name-abroot
     type: includes
