@@ -27,6 +27,11 @@ stages:
     type: includes
     includes:
       - modules/50-install-1password.yml
+
+  - name: qemu-kvm
+    type: includes
+    includes:
+      - modules/50-setup-qemu-kvm.yml
       
   # END CUSTOM ACTIONS
 
