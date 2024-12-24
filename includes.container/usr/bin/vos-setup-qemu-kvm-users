@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# References:
+#  * https://gitlab.com/libvirt/libvirt/-/blob/ef7c0f46f9629f6bc9537703df5b78efc2d69ab0/libvirt.spec.in#L1756
+#  * https://gitlab.com/libvirt/libvirt/-/blob/ef7c0f46f9629f6bc9537703df5b78efc2d69ab0/libvirt.spec.in#L1885
+
 # Create libvirt groups if they don't already exist
-getent group 'libvirt' >/dev/null || groupadd -r libvirt || :
+getent group 'libvirt' >/dev/null || groupadd -r 'libvirt' || :
 getent group 'kvm' >/dev/null || groupadd -f -g '36' -r 'kvm' || :
 getent group 'qemu' >/dev/null || groupadd -f -g '107' -r 'qemu' || :
 
