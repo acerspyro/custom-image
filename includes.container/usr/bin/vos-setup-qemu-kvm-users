@@ -9,7 +9,7 @@ getent group 'libvirt' >/dev/null || groupadd -r 'libvirt' || :
 getent group 'kvm' >/dev/null || groupadd -f -g '36' -r 'kvm' || :
 getent group 'qemu' >/dev/null || groupadd -f -g '107' -r 'qemu' || :
 
-# Create libvirt users
+# Create qemu and kvm users
 if ! getent passwd 'qemu' >/dev/null; then
   if ! getent passwd '107' >/dev/null; then
     useradd -r -u '107' -g 'qemu' -G 'kvm' -d '/' -s '/sbin/nologin' -c 'qemu user' 'qemu' || :
@@ -18,26 +18,11 @@ if ! getent passwd 'qemu' >/dev/null; then
   fi
 fi
 
+# Create libvirt-qemu user, see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=768000
+getent group 'libvirt-qemu' >/dev/null || groupadd -r 'libvirt-qemu' || :
+
+getent passwd 'libvirt-qemu' >/dev/null || useradd -r -g 'libvirt-qemu' -G 'libvirt-qemu,libvirt,kvm,qemu' -d '/' -s '/sbin/nologin' -c 'libvirt-qemu user' 'libvirt-qemu' || :
+
 # Add all sudoers to libvirt and kvm as they are system administrators anyway
 gpasswd -M "$(getent group sudo | cut -d: -f4)" libvirt
 gpasswd -M "$(getent group sudo | cut -d: -f4)" kvm
-
-# # Fix libvirt socket and directory permissions
-# chown root:libvirt /var/run/libvirt/libvirt-sock
-# chmod 660 /var/run/libvirt/libvirt-sock
-
-# # Fix KVM device permissions
-# chown root:kvm /dev/kvm
-# chmod 660 /dev/kvm
-
-# # Fix libvirt-qemu owned directory permissions
-# chown -R libvirt-qemu:libvirt-qemu /var/lib/libvirt/qemu
-# chmod 700 /var/lib/libvirt/qemu
-
-# # Fix libvirt directory permissions
-# chown -R root:libvirt /var/lib/libvirt
-# chown -R root:libvirt /etc/libvirt
-
-# # Fix common libvirt runtime directory permissions
-# chown root:libvirt /var/run/libvirt
-# chmod 755 /var/run/libvirt
